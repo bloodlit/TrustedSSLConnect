@@ -15,6 +15,7 @@ import java.util.Enumeration;
 public class SSLConnector {
     private final SSLConfiguration configuration;
     private final String ALGORITHM = "GostX509";
+    private final String PROVIDER = "JTLS";
 
     private KeyStore keyStore = null;
     private KeyStore trustStore = null;
@@ -32,7 +33,7 @@ public class SSLConnector {
                 this.configuration.getTrustStorePassword());
 
         if (auth) {
-            this.kmf = KeyManagerFactory.getInstance(ALGORITHM);
+            this.kmf = KeyManagerFactory.getInstance(ALGORITHM, PROVIDER);
             this.keyStore = KeyStore.getInstance(this.configuration.getKeyStoreType());
             if (this.configuration.getKeyAlias() != null && !this.configuration.getKeyAlias().isEmpty())
                 this.keyStore.load(new StoreInputStream(this.configuration.getKeyAlias()), this.configuration.getKeyPassword());
@@ -58,12 +59,12 @@ public class SSLConnector {
             this.kmf.init(this.keyStore, this.configuration.getKeyPassword());
         }
 
-        this.tmf = TrustManagerFactory.getInstance(ALGORITHM);
+        this.tmf = TrustManagerFactory.getInstance(ALGORITHM, PROVIDER);
         this.tmf.init(this.trustStore);
     }
 
     public SSLContext create() throws Exception {
-        SSLContext sSLContext = SSLContext.getInstance("GostTLS", "JTLS");
+        SSLContext sSLContext = SSLContext.getInstance("GostTLS", PROVIDER);
         sSLContext.init(
                 this.kmf != null ? this.kmf.getKeyManagers() : null,
                 this.tmf.getTrustManagers(),
