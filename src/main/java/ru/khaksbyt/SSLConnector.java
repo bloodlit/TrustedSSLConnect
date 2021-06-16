@@ -8,7 +8,6 @@ import javax.net.ssl.TrustManagerFactory;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
@@ -16,11 +15,13 @@ public class SSLConnector {
     private final SSLConfiguration configuration;
     private final String ALGORITHM = "GostX509";
     private final String PROVIDER = "JTLS";
-
     private KeyStore keyStore = null;
     private KeyStore trustStore = null;
     private KeyManagerFactory kmf = null;
     private TrustManagerFactory tmf = null;
+
+    private PrivateKey privateKey = null;
+    private X509Certificate certificate = null;
 
     public SSLConnector(SSLConfiguration configuration) {
         this.configuration = configuration;
@@ -44,10 +45,10 @@ public class SSLConnector {
             while (aliases.hasMoreElements()) {
                 String alias = aliases.nextElement();
                 System.out.println("alias name: " + alias);
-                Certificate certificate = keyStore.getCertificate(alias);
-                System.out.println("Signer found: " + ((X509Certificate)certificate).getSubjectX500Principal().getName());
+                certificate = (X509Certificate) keyStore.getCertificate(alias);
+                System.out.println("Signer found: " + certificate.getSubjectX500Principal().getName());
 
-                PrivateKey privateKey = null;
+                privateKey = null;
                 Key key = keyStore.getKey(alias, this.configuration.getKeyPassword());
                 if (key != null) {
                     privateKey = (PrivateKey) key;
@@ -70,5 +71,13 @@ public class SSLConnector {
                 this.tmf.getTrustManagers(),
                 null);
         return sSLContext;
+    }
+
+    public PrivateKey privateKey() {
+        return this.privateKey;
+    }
+
+    public X509Certificate certificate() {
+        return this.certificate;
     }
 }

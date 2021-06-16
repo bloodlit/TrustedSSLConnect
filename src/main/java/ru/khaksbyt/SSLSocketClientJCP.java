@@ -1,6 +1,7 @@
 package ru.khaksbyt;
 
 import ru.CryptoPro.JCP.Util.JCPInit;
+import ru.khaksbyt.sign.XmlXadesSign;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -10,12 +11,17 @@ import java.net.URL;
 import java.security.Security;
 
 public class SSLSocketClientJCP {
+
     private final SSLConfiguration configuration;
     private final SSLConnector connector;
+    private final XmlXadesSign xmlXadesSign;
 
-    public SSLSocketClientJCP() {
+    public SSLSocketClientJCP() throws Exception {
         this.configuration = new SSLConfiguration();
         this.connector = new SSLConnector(this.configuration);
+        this.connector.prepare(true);
+
+        this.xmlXadesSign = new XmlXadesSign(connector.certificate(), connector.privateKey());
     }
 
     public static void main(String[] args) throws Exception {
@@ -38,7 +44,6 @@ public class SSLSocketClientJCP {
         try {
             URL url = new URL("https://api.dom.gosuslugi.ru/ext-bus-home-management-service/services/HomeManagementAsync");
 
-            connector.prepare(true);
             SSLContext sSLContext = connector.create();
             SSLSocketFactory sSLSocketFactory = sSLContext.getSocketFactory();
             HttpsURLConnection.setDefaultSSLSocketFactory(sSLSocketFactory);
@@ -47,7 +52,10 @@ public class SSLSocketClientJCP {
             httpsURLConnection.setRequestProperty("Connection", "Keep-Alive");
             httpsURLConnection.setRequestProperty("Keep-Alive", "header");
             httpsURLConnection.setRequestProperty("Content-Type", "text/xml; charset=utf-8");
-            httpsURLConnection.setRequestProperty("SOAPAction", "urn:getState");
+
+            //httpsURLConnection.setRequestProperty("SOAPAction", "urn:getState");
+            httpsURLConnection.setRequestProperty("SOAPAction", "urn:exportHouseData");
+
             httpsURLConnection.setRequestMethod("GET");
             httpsURLConnection.setDoOutput(true);
             httpsURLConnection.setReadTimeout(300000);
@@ -74,18 +82,27 @@ public class SSLSocketClientJCP {
         return stream.toByteArray();
     }
 
-    private void print_content(HttpsURLConnection paramHttpsURLConnection) throws IOException {
+    private void print_content(HttpsURLConnection paramHttpsURLConnection) throws Exception {
         if (paramHttpsURLConnection != null) {
             System.out.println("****** Content of the URL ********");
 
-            InputStream fis = getClass().getClassLoader().getResourceAsStream("req/getstate.xml");
+            InputStream fis = getClass().getClassLoader().getResourceAsStream("req/req1.xml");
             byte[] dataBytes = streamToByteArray(fis);
-            String xmlString = new String(dataBytes, "UTF-8");
+
+            //Подписываем документ
+            OutputStream os = paramHttpsURLConnection.getOutputStream();
+
+            xmlXadesSign.sign(dataBytes, "signed-data-container", os);
+
+            //String xmlString = new String(dataBytes, "UTF-8");
             System.out.println("Send packet: ");
-            System.out.println(xmlString);
+            System.out.println(os);
+
+/*
             DataOutputStream dos = new DataOutputStream(paramHttpsURLConnection.getOutputStream());
             dos.write(dataBytes);
             dos.flush();
+*/
 
             paramHttpsURLConnection.connect();
 
