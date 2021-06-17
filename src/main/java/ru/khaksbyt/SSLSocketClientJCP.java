@@ -53,8 +53,8 @@ public class SSLSocketClientJCP {
             httpsURLConnection.setRequestProperty("Keep-Alive", "header");
             httpsURLConnection.setRequestProperty("Content-Type", "text/xml; charset=utf-8");
 
-            //httpsURLConnection.setRequestProperty("SOAPAction", "urn:getState");
-            httpsURLConnection.setRequestProperty("SOAPAction", "urn:exportHouseData");
+            httpsURLConnection.setRequestProperty("SOAPAction", "urn:getState");
+            //httpsURLConnection.setRequestProperty("SOAPAction", "urn:exportHouseData");
 
             httpsURLConnection.setRequestMethod("GET");
             httpsURLConnection.setDoOutput(true);
@@ -86,23 +86,21 @@ public class SSLSocketClientJCP {
         if (paramHttpsURLConnection != null) {
             System.out.println("****** Content of the URL ********");
 
-            InputStream fis = getClass().getClassLoader().getResourceAsStream("req/req1.xml");
+            InputStream fis = getClass().getClassLoader().getResourceAsStream("req/getstate.xml");
             byte[] dataBytes = streamToByteArray(fis);
 
             //Подписываем документ
             OutputStream os = paramHttpsURLConnection.getOutputStream();
 
-            xmlXadesSign.sign(dataBytes, "signed-data-container", os);
+            //xmlXadesSign.sign(dataBytes, "signed-data-container", os);
 
             //String xmlString = new String(dataBytes, "UTF-8");
             System.out.println("Send packet: ");
             System.out.println(os);
 
-/*
-            DataOutputStream dos = new DataOutputStream(paramHttpsURLConnection.getOutputStream());
+            DataOutputStream dos = new DataOutputStream(os);
             dos.write(dataBytes);
             dos.flush();
-*/
 
             paramHttpsURLConnection.connect();
 

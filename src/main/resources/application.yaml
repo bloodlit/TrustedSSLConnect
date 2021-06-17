@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: GisJkhExchanging
+  profiles:
+    active: default
+server:
+  port: 8090
+
+application:
+  store:
+    trust:
+      type: CertStore
+      file: c:\certs\trustStore.jks
+      password: 12345678
+    key:
+      type: REGISTRY
+      alias:
+      password: 12345678
+
+logging:
+  level:
+    ru:
+      khaksbyt: debug
