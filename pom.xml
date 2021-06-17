@@ -17,7 +17,7 @@
 
     <properties>
 
-        <httpclient.version>5.1</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <xalan.version>2.7.2</xalan.version>
         <xades4j.version>1.6.0</xades4j.version>
 
@@ -33,6 +33,12 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
@@ -44,9 +50,10 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
         <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
         </dependency>
 

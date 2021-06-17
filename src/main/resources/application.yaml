@@ -10,13 +10,18 @@ application:
   store:
     trust:
       type: CertStore
-      file: c:\certs\trustStore.jks
-      password: 12345678
     key:
       type: REGISTRY
-      alias:
-      password: 12345678
-
+  client:
+    defaultUri: https://api.dom.gosuslugi.ru/
+    pooling:
+      connection:
+        total: 10
+        perRoute: 10
+    timeout:
+      socket: 60
+      connection: 30
+      request: 30
 logging:
   level:
     ru:

@@ -6,11 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.CryptoPro.JCP.KeyStore.StoreInputStream;
 import ru.CryptoPro.JCP.Util.JCPInit;
+import ru.CryptoPro.JCPxml.XmlInit;
 
 import javax.annotation.PostConstruct;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -47,7 +47,7 @@ public class CryptoProConfigure {
     private PrivateKey privateKey;
     private X509Certificate certificate;
 
-    private SSLSocketFactory factory = null;
+    private SSLContext sSLContext;
 
     public CryptoProConfigure() {
         //включаем проверка цепочки сертификатов на отзыв по CRLDP сертификата
@@ -56,13 +56,13 @@ public class CryptoProConfigure {
 
         Security.setProperty("ssl.KeyManagerFactory.algorithm", "GostX509");
         Security.setProperty("ssl.TrustManagerFactory.algorithm", "GostX509");
-
-        // инициализируем providers JCSP
-        JCPInit.initProviders(true);
     }
 
     @PostConstruct
     public void init() throws Exception {
+        // инициализируем providers JCSP
+        JCPInit.initProviders(true);
+
         final KeyStore trustStore = KeyStore.getInstance(trustStoreType);
         if (trustStoreFile == null || "".equals(trustStoreFile))
             loadKeyStoreByName(trustStore);
@@ -85,16 +85,16 @@ public class CryptoProConfigure {
         if (this.privateKey == null) {
             log.error("Приватнрый ключ не найден: " + keyStoreAlias, new Exception());
         }
-        log.debug("Приватный ключ: \"" + keyStoreAlias + "\" алгоритм: " + this.privateKey.getAlgorithm());
+        log.debug("Приватный ключ: \"" + keyStoreType + "\\" + keyStoreAlias + "\" алгоритм: " + this.privateKey.getAlgorithm());
 
         // Сертификат для проверки.
         this.certificate = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
         log.debug("Сертификат: " + certificate.getIssuerX500Principal().getName());
 
-        SSLContext sSLContext = SSLContext.getInstance("GostTLS", "JTLS");
+        sSLContext = SSLContext.getInstance("GostTLS", "JTLS");
         sSLContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 
-        factory = sSLContext.getSocketFactory();
+        XmlInit.init();
     }
 
     private void loadKeyStoreByFile(KeyStore store) throws KeyStoreException {
@@ -127,8 +127,13 @@ public class CryptoProConfigure {
         return this.certificate;
     }
 
+    /**
+     * Защищенный контекст соединения.
+     *
+     * @return
+     */
     @Bean
-    public SSLSocketFactory sslSocketFactory() {
-        return this.factory;
+    public SSLContext getsSLContext() {
+        return this.sSLContext;
     }
 }
