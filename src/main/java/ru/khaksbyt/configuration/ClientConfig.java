@@ -8,6 +8,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -25,7 +26,6 @@ import javax.net.ssl.SSLContext;
 @Slf4j
 @Configuration
 public class ClientConfig {
-
     // Keep alive
     private static final long DEFAULT_KEEP_ALIVE_TIME = 20 * 1000; // 20 sec
 
@@ -59,12 +59,11 @@ public class ClientConfig {
      */
     @PostConstruct
     private void init() {
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+
     }
 
     /**
      * Пул соединений обеспечивает повторное использование уже открытых соединений
-     * @return
      */
     @Bean
     public PoolingHttpClientConnectionManager poolingHttpClientConnectionManager() {
@@ -97,6 +96,11 @@ public class ClientConfig {
     }
 
     @Bean
+    public SSLConnectionSocketFactory sslConnectionSocketFactory() {
+        return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+    }
+
+    @Bean
     public CloseableHttpClient httpClient() {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(connectionTimeout)
@@ -106,6 +110,7 @@ public class ClientConfig {
 
         return HttpClients.custom()
                 .setDefaultRequestConfig(requestConfig)
+                .setSSLSocketFactory(sslConnectionSocketFactory())
                 .setConnectionManager(poolingHttpClientConnectionManager())
                 .setKeepAliveStrategy(connectionKeepAliveStrategy())
                 .build();
