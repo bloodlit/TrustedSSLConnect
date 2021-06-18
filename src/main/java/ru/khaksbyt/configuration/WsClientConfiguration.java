@@ -1,32 +1,35 @@
 package ru.khaksbyt.configuration;
 
 import org.apache.http.client.HttpClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.ws.client.core.WebServiceTemplate;
-import org.springframework.ws.client.core.support.WebServiceGatewaySupport;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 import ru.khaksbyt.interceptor.SOAPActionInterceptor;
 import ru.khaksbyt.interceptor.SignInterceptor;
 
 @Configuration
-public class WsClientConfiguration extends WebServiceGatewaySupport {
+public class WsClientConfiguration {
+    private final WebServiceTemplate template;
 
-    public WsClientConfiguration(HttpComponentsMessageSender sender) {
-        WebServiceTemplate template = new WebServiceTemplate();
-        template.setMessageSender(sender);
+    @Autowired
+    public WsClientConfiguration(HttpClient httpClient) {
+        template = new WebServiceTemplate();
+        template.setMessageSender(defaultMyMessageSender(httpClient));
+        template.setMarshaller(marshaller());
+        template.setUnmarshaller(marshaller());
         template.setInterceptors(new ClientInterceptor[]{
                 new SignInterceptor(),
                 new SOAPActionInterceptor()
         });
 
-        setWebServiceTemplate(template);
+        //setWebServiceTemplate(template);
     }
 
-    @Bean
-    public Jaxb2Marshaller marshaller() {
+    private Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
 
         marshaller.setPackagesToScan(
@@ -41,10 +44,13 @@ public class WsClientConfiguration extends WebServiceGatewaySupport {
         return jaxbClass.getPackage().getName();
     }
 
-    @Bean
-    public HttpComponentsMessageSender defaultMyMessageSender(HttpClient httpClient) {
+    private HttpComponentsMessageSender defaultMyMessageSender(HttpClient httpClient) {
         return new HttpComponentsMessageSender(httpClient);
     }
 
+    @Bean
+    public WebServiceTemplate defaultWebServiceTemplate() {
+        return template;
+    }
 
 }

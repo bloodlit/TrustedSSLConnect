@@ -26,3 +26,8 @@ logging:
   level:
     ru:
       khaksbyt: debug
+    org:
+      apache:
+        http: debug
+      springframework:
+        ws: trace

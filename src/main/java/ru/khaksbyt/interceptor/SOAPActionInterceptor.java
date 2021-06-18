@@ -11,6 +11,8 @@ import org.springframework.ws.context.MessageContext;
 public class SOAPActionInterceptor implements ClientInterceptor {
     @Override
     public boolean handleRequest(MessageContext messageContext) throws WebServiceClientException {
+        log.info("Server Request Message: " + messageContext.getRequest().toString());
+
         return true;
     }
 

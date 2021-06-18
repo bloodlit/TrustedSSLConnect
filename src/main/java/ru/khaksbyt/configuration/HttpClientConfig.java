@@ -6,9 +6,12 @@ import org.apache.http.HeaderElementIterator;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -19,13 +22,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import javax.annotation.PostConstruct;
 import javax.net.ssl.SSLContext;
 
 @Slf4j
 @Configuration
-public class ClientConfig {
+public class HttpClientConfig {
     // Keep alive
     private static final long DEFAULT_KEEP_ALIVE_TIME = 20 * 1000; // 20 sec
 
@@ -50,7 +54,7 @@ public class ClientConfig {
     private final SSLContext sslContext;
 
     @Autowired
-    public ClientConfig(SSLContext sslContext) {
+    public HttpClientConfig(SSLContext sslContext) {
         this.sslContext = sslContext;
     }
 
@@ -67,7 +71,12 @@ public class ClientConfig {
      */
     @Bean
     public PoolingHttpClientConnectionManager poolingHttpClientConnectionManager() {
-        PoolingHttpClientConnectionManager poolingConnectionManager = new PoolingHttpClientConnectionManager();
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("http", new PlainConnectionSocketFactory())
+                .register("https", sslConnectionSocketFactory())
+                .build();
+
+        PoolingHttpClientConnectionManager poolingConnectionManager = new PoolingHttpClientConnectionManager(registry);
         poolingConnectionManager.setMaxTotal(this.totalConnections);
         poolingConnectionManager.setDefaultMaxPerRoute(this.routeConnections);
 
@@ -97,7 +106,7 @@ public class ClientConfig {
 
     @Bean
     public SSLConnectionSocketFactory sslConnectionSocketFactory() {
-        return new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        return new SSLConnectionSocketFactory(sslContext);
     }
 
     @Bean
@@ -110,9 +119,9 @@ public class ClientConfig {
 
         return HttpClients.custom()
                 .setDefaultRequestConfig(requestConfig)
-                .setSSLSocketFactory(sslConnectionSocketFactory())
                 .setConnectionManager(poolingHttpClientConnectionManager())
                 .setKeepAliveStrategy(connectionKeepAliveStrategy())
+                .addInterceptorFirst(new HttpComponentsMessageSender.RemoveSoapHeadersInterceptor())
                 .build();
     }
 }

@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "application.client.pooling.connection.total",
+      "type": "java.lang.Integer",
+      "description": "Установливает общее количество подключений по всем HTTP-маршрутам."
+    },
+    {
+      "name": "application.client.pooling.connection.perRoute",
+      "type": "java.lang.String",
+      "description": "Установить максимальное количество подключений для каждого HTTP-маршрута в пуле."
+    }
+  ]
+}

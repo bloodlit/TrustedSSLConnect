@@ -44,12 +44,16 @@ public class CryptoProConfigure {
     @Value("${application.store.key.password:#{null}}")
     private String keyStorePassword;
 
+    private KeyStore trustStore;
+
     private PrivateKey privateKey;
     private X509Certificate certificate;
 
     private SSLContext sSLContext;
 
     public CryptoProConfigure() {
+        System.setProperty("tls_prohibit_disabled_validation", "false");
+
         //включаем проверка цепочки сертификатов на отзыв по CRLDP сертификата
         System.setProperty("com.sun.security.enableCRLDP", "true");
         System.setProperty("com.ibm.security.enableCRLDP", "true");
@@ -63,7 +67,7 @@ public class CryptoProConfigure {
         // инициализируем providers JCSP
         JCPInit.initProviders(true);
 
-        final KeyStore trustStore = KeyStore.getInstance(trustStoreType);
+        this.trustStore = KeyStore.getInstance(trustStoreType);
         if (trustStoreFile == null || "".equals(trustStoreFile))
             loadKeyStoreByName(trustStore);
         else
@@ -94,7 +98,7 @@ public class CryptoProConfigure {
         sSLContext = SSLContext.getInstance("GostTLS", "JTLS");
         sSLContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 
-        XmlInit.init();
+        //XmlInit.init();
     }
 
     private void loadKeyStoreByFile(KeyStore store) throws KeyStoreException {
