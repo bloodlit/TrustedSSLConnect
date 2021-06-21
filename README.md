@@ -2,7 +2,7 @@
 
 Используемые библиотеки:
 
-    1. Spring WebService
+    1. Spring Web Services
     2. Apache HttpClient 4
 
     
