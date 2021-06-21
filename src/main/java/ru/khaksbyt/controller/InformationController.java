@@ -2,29 +2,40 @@ package ru.khaksbyt.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 import ru.khaksbyt.service.HouseManagementClient;
-import ru.khaksbyt.service.InformationService;
 
 @Controller
 public class InformationController {
 
-    private final InformationService service;
     private final HouseManagementClient client;
 
-    public InformationController(InformationService service, HouseManagementClient client) {
-        this.service = service;
+    public InformationController(HouseManagementClient client) {
         this.client = client;
     }
 
-    @GetMapping("/information")
-    public String information(Model model) {
+    @GetMapping("/house/exportHouseRequest")
+    public String exportHouseRequest() {
+        return "exportHouseRequest";
+    }
 
-        String res = client.getState("C4C98E02-2FB7-2772-6E05-30100007F149");
+    @RequestMapping(value = "/house/exportHouseRequest", method = RequestMethod.POST)
+    public String information(@RequestParam(value = "guid", required = true) String guid, Model model) {
 
-        model.addAttribute("certificate", service.certificateName());
+        String res = client.exportHouseRequest(guid);
+
+        model.addAttribute("request", guid);
         model.addAttribute("result", res);
 
         return "information";
+    }
+
+    @GetMapping("/base/getstate/{guid}")
+    public String getstat(@PathVariable String guid, Model model) {
+
+        String res = client.getState(guid);
+        model.addAttribute("result", res);
+
+        return "getstate";
     }
 }

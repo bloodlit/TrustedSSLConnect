@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ExportHouseRequest</title>
+</head>
+<body>
+    <form th:action="@{/house/exportHouseRequest}" method="post">
+        <p>FIAS GUID <input type="text" id="guid" name="guid" th:value="*{guid}"/></p>
+        <p><input type="submit" value="Submit" /></p>
+    </form>
+</body>
+</html>

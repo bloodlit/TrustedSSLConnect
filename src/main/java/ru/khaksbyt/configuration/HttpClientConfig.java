@@ -48,7 +48,7 @@ public class HttpClientConfig {
     @Value("${application.client.pooling.connection.perRoute:40}")
     private Integer routeConnections;
 
-    @Value("application.client.defaultUri")
+    @Value("${application.client.defaultUri}")
     private String defaultUri;
 
     private final SSLContext sslContext;

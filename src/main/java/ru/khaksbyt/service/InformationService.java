@@ -19,21 +19,12 @@ public class InformationService {
 
     private final X509Certificate certificate;
 
-
     public InformationService(X509Certificate certificate) {
         this.certificate = certificate;
     }
 
     @SneakyThrows
     public String certificateName() {
-/*        StringBuilder name = new StringBuilder();
-        String dn = certificate.getSubjectX500Principal().getName(RFC1779);
-        LdapName ldapDN = new LdapName(dn);
-        for (Rdn rdn : ldapDN.getRdns()) {
-            name.append(rdn.getType()).append(":").append(rdn.getValue()).append("#");
-            //System.out.println(rdn.getType() + " -> " + rdn.getValue());
-        }
-        return name.toString();*/
         return Stream.of(certificate)
                 .map(cert -> cert.getSubjectX500Principal().getName(RFC1779))
                 .flatMap(name -> {

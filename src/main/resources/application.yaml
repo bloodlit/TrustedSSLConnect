@@ -22,12 +22,12 @@ application:
       socket: 60
       connection: 30
       request: 30
-logging:
-  level:
-    ru:
-      khaksbyt: debug
-    org:
-      apache:
-        http: debug
-      springframework:
-        ws: trace
+#logging:
+#  level:
+#    ru:
+#      khaksbyt: debug
+#    org:
+#      apache:
+#        http: debug
+#      springframework:
+#        ws: trace

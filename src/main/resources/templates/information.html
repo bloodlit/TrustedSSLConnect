@@ -6,8 +6,8 @@
 </head>
 <body>
 
-<p>Сертификат: <a th:utext="${certificate}"></a></p>
-<p>Сертификат: <a th:utext="${result}"></a></p>
+<p>Запрос: <a th:utext="${request}"></a></p>
+<p>Ответ: <a th:href="@{'/base/getstate/'+${result}}" th:utext="${result}"></a></p>
 
 </body>
 </html>

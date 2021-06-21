@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>ru.khaksbyt</groupId>
     <artifactId>TrustedSSLConnect</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -118,43 +118,46 @@
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jaxws-maven-plugin</artifactId>
-                <version>2.6</version>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>2.5.0</version>
                 <executions>
                     <execution>
+                        <id>xjc</id>
                         <goals>
-                            <goal>wsimport</goal>
+                            <goal>xjc</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <wsdlDirectory>${project.basedir}/src/main/resources/wsdl/</wsdlDirectory>
-                    <wsdlFiles>
-                        <wsdlFile>house-management/hcs-house-management-service-async.wsdl</wsdlFile>
-                    </wsdlFiles>
+                    <sourceType>wsdl</sourceType>
+                    <laxSchemaValidation>true</laxSchemaValidation>
+                    <sources>
+                        <source>${project.basedir}/src/main/resources/wsdl/house-management/hcs-house-management-service-async.wsdl</source>
+                    </sources>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>14</source>
+                    <target>14</target>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
     <profiles>
-        <!-- add back the jaxws SOAP dependendies which were removed in JDK11 -->
         <profile>
-            <id>jdk11</id>
+            <id>java11</id>
             <activation>
                 <jdk>[11,)</jdk>
             </activation>
-            <!-- С 3 версии используеться jakarta.jws -->
+
             <dependencies>
                 <dependency>
-                    <groupId>com.sun.xml.ws</groupId>
-                    <artifactId>jaxws-rt</artifactId>
-                    <version>2.3.4</version>
-                    <type>pom</type>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.ws</groupId>
-                    <artifactId>rt</artifactId>
-                    <version>2.3.4</version>
+                    <groupId>org.glassfish.jaxb</groupId>
+                    <artifactId>jaxb-runtime</artifactId>
                 </dependency>
             </dependencies>
         </profile>

@@ -7,6 +7,14 @@ import org.springframework.context.annotation.Configuration;
 import ru.CryptoPro.JCP.KeyStore.StoreInputStream;
 import ru.CryptoPro.JCP.Util.JCPInit;
 import ru.CryptoPro.JCPxml.XmlInit;
+import ru.khaksbyt.xades.CustomizableAlgorithmProvider;
+import ru.khaksbyt.xades.CustomizableDigestEngineProvider;
+import ru.khaksbyt.xades.production.CustomizableXadesBesSigningProfileFactory;
+import xades4j.production.XadesSigner;
+import xades4j.production.XadesSigningProfile;
+import xades4j.providers.KeyingDataProvider;
+import xades4j.providers.impl.DirectKeyingDataProvider;
+import xades4j.utils.XadesProfileResolutionException;
 
 import javax.annotation.PostConstruct;
 import javax.net.ssl.KeyManagerFactory;
@@ -44,10 +52,9 @@ public class CryptoProConfigure {
     @Value("${application.store.key.password:#{null}}")
     private String keyStorePassword;
 
-    private KeyStore trustStore;
-
-    private PrivateKey privateKey;
     private X509Certificate certificate;
+
+    private XadesSigningProfile sigProf;
 
     private SSLContext sSLContext;
 
@@ -66,8 +73,9 @@ public class CryptoProConfigure {
     public void init() throws Exception {
         // инициализируем providers JCSP
         JCPInit.initProviders(true);
+        XmlInit.init();
 
-        this.trustStore = KeyStore.getInstance(trustStoreType);
+        KeyStore trustStore = KeyStore.getInstance(trustStoreType);
         if (trustStoreFile == null || "".equals(trustStoreFile))
             loadKeyStoreByName(trustStore);
         else
@@ -85,20 +93,33 @@ public class CryptoProConfigure {
         tmf.init(trustStore);
 
         // Ключ подписи.
-        this.privateKey = (PrivateKey) keyStore.getKey(keyStoreAlias, keyStorePassword.toCharArray());
-        if (this.privateKey == null) {
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(keyStoreAlias, keyStorePassword.toCharArray());
+        if (privateKey == null) {
             log.error("Приватнрый ключ не найден: " + keyStoreAlias, new Exception());
         }
-        log.debug("Приватный ключ: \"" + keyStoreType + "\\" + keyStoreAlias + "\" алгоритм: " + this.privateKey.getAlgorithm());
+        log.debug("Приватный ключ: \"" + keyStoreType + "\\" + keyStoreAlias + "\" алгоритм: " + privateKey.getAlgorithm());
 
         // Сертификат для проверки.
-        this.certificate = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
+        certificate = (X509Certificate) keyStore.getCertificate(keyStoreAlias);
         log.debug("Сертификат: " + certificate.getIssuerX500Principal().getName());
 
         sSLContext = SSLContext.getInstance("GostTLS", "JTLS");
         sSLContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 
-        //XmlInit.init();
+        // создаем провайдер для доступа к закрытому ключу
+        KeyingDataProvider kp = new DirectKeyingDataProvider(certificate, privateKey);
+
+        // создаем провайдер, описывающий используемые алгоритмы
+        CustomizableAlgorithmProvider algorithmsProvider = new CustomizableAlgorithmProvider();
+        // создаем провайдер, ответственный за расчет хешей
+        CustomizableDigestEngineProvider digestEngineProvider = new CustomizableDigestEngineProvider();
+
+        // настраиваем профиль подписания
+        sigProf = new CustomizableXadesBesSigningProfileFactory()
+                .withKeyingProvider(kp)
+                .withAlgorithmsProvider(algorithmsProvider)
+                .withMessageDigestEngineProvider(digestEngineProvider)
+                .create();
     }
 
     private void loadKeyStoreByFile(KeyStore store) throws KeyStoreException {
@@ -122,19 +143,20 @@ public class CryptoProConfigure {
     }
 
     @Bean
-    public PrivateKey privateKey() {
-        return this.privateKey;
-    }
-
-    @Bean
-    public X509Certificate certificate() {
+    public X509Certificate getCertificate() {
         return this.certificate;
     }
 
     /**
+     * Для подписи
+     */
+    @Bean
+    public XadesSigner xadesSigner() throws XadesProfileResolutionException {
+        return sigProf.newSigner();
+    }
+
+    /**
      * Защищенный контекст соединения.
-     *
-     * @return
      */
     @Bean
     public SSLContext getsSLContext() {
