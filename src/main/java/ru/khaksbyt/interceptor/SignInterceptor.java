@@ -6,10 +6,16 @@ import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.client.WebServiceClientException;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.context.MessageContext;
+import org.springframework.ws.soap.SoapHeader;
+import org.springframework.ws.soap.SoapHeaderElement;
 import org.springframework.ws.soap.SoapMessage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import ru.gosuslugi.dom.schema.integration.base.HeaderType;
+import ru.khaksbyt.model.memory.History;
+import ru.khaksbyt.repository.memory.HistoryRepository;
+import ru.khaksbyt.util.UtilsDate;
 import xades4j.XAdES4jException;
 import xades4j.algorithms.EnvelopedSignatureTransform;
 import xades4j.algorithms.ExclusiveCanonicalXMLWithoutComments;
@@ -19,16 +25,22 @@ import xades4j.production.SignedDataObjects;
 import xades4j.production.XadesSigner;
 import xades4j.properties.DataObjectDesc;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.xpath.*;
+import java.util.Iterator;
 
 @Slf4j
 @Component
 public class SignInterceptor implements ClientInterceptor {
 
     private final XadesSigner signer;
+    private final HistoryRepository historyRepository;
 
-    public SignInterceptor(XadesSigner signer) {
+    public SignInterceptor(XadesSigner signer, HistoryRepository repository) {
         this.signer = signer;
+        this.historyRepository = repository;
     }
 
     public void signDocument(Document doc) throws XPathExpressionException, XAdES4jException {
@@ -63,7 +75,7 @@ public class SignInterceptor implements ClientInterceptor {
     public boolean handleRequest(MessageContext messageContext) throws WebServiceClientException {
         log.debug("Server Request Message: " + messageContext.getRequest().toString());
         WebServiceMessage message = messageContext.getRequest();
-        if (message instanceof SoapMessage)
+        if (message instanceof SoapMessage) {
             try {
                 SoapMessage soapMessage = (SoapMessage) message;
                 Document envelopeAsDocument = soapMessage.getDocument();
@@ -76,6 +88,28 @@ public class SignInterceptor implements ClientInterceptor {
             } catch (XPathExpressionException | XAdES4jException e) {
                 e.printStackTrace();
             }
+
+            SoapHeader header = ((SoapMessage) message).getSoapHeader();
+            Iterator<SoapHeaderElement> it = header.examineAllHeaderElements();
+            while (it.hasNext()) {
+                try {
+                    JAXBContext context = JAXBContext.newInstance(HeaderType.class);
+                    Unmarshaller unmarshaller = context.createUnmarshaller();
+                    HeaderType headerType = (HeaderType) unmarshaller.unmarshal(it.next().getSource());
+
+                    historyRepository.save(
+                            new History(
+                                    headerType.getMessageGUID(),
+                                    UtilsDate.convert(headerType.getDate()),
+                                    ((SoapMessage) message).getSoapAction())
+                    );
+
+                } catch (JAXBException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
 
         return true;
     }

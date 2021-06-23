@@ -16,9 +16,8 @@
     </parent>
 
     <properties>
-
+        <cxf.version>3.4.4</cxf.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <xalan.version>2.7.2</xalan.version>
         <xades4j.version>1.6.0</xades4j.version>
 
         <java.version>16</java.version>
@@ -49,6 +48,24 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Postgres JDBC driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
@@ -67,25 +84,17 @@
             <version>${httpclient.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/xalan/serializer -->
-        <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>serializer</artifactId>
-            <version>${xalan.version}</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/xalan/xalan -->
-        <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>${xalan.version}</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>5.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -116,6 +125,44 @@
                     </excludes>
                 </configuration>
             </plugin>
+<!--
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <wsdlFiles>
+                        <wsdlFile>${project.basedir}/src/main/resources/wsdl/house-management/hcs-house-management-service-async.wsdl</wsdlFile>
+                    </wsdlFiles>
+                </configuration>
+            </plugin>
+-->
+            <plugin>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-codegen-plugin</artifactId>
+                <version>${cxf.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-sources</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
+                            <wsdlOptions>
+                                <wsdlOption>
+                                    <wsdl>${basedir}/src/main/resources/wsdl/house-management/hcs-house-management-service-async.wsdl</wsdl>
+                                </wsdlOption>
+                                <wsdlOption>
+                                    <wsdl>${basedir}/src/main/resources/wsdl/nsi-common/hcs-nsi-common-service-async.wsdl</wsdl>
+                                </wsdlOption>
+                            </wsdlOptions>
+                        </configuration>
+                        <goals>
+                            <goal>wsdl2java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jaxb2-maven-plugin</artifactId>
@@ -129,20 +176,19 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <sourceType>wsdl</sourceType>
+                    <locale>ru</locale>
                     <laxSchemaValidation>true</laxSchemaValidation>
                     <sources>
-                        <source>${project.basedir}/src/main/resources/wsdl/house-management/hcs-house-management-service-async.wsdl</source>
+                        <source>${project.basedir}/src/main/resources/wsdl/house-management/hcs-house-management-types.xsd</source>
+                        <source>${project.basedir}/src/main/resources/wsdl/nsi-common/hcs-nsi-common-types.xsd</source>
                     </sources>
                 </configuration>
             </plugin>
+-->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>14</source>
-                    <target>14</target>
-                </configuration>
             </plugin>
         </plugins>
     </build>

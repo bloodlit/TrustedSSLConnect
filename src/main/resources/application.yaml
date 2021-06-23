@@ -3,10 +3,39 @@ spring:
     name: GisJkhExchanging
   profiles:
     active: default
+  h2:
+    console:
+      enabled=true
+
 server:
   port: 8090
 
 application:
+  datasource:
+    in-memory:
+      url: jdbc:h2:mem:dbChache
+      driverClassName: org.h2.Driver
+      username: sa
+      password: password
+      configuration:
+        pool-name: InMemoryPool
+      properties:
+        dialect: org.hibernate.dialect.H2Dialect
+        show_sql: false
+        hbm2ddl: create-drop
+    primary:
+      url: jdbc:postgresql://localhost:5432/gisjkh
+      driverClassName: org.postgresql.Driver
+      username: postgres
+      password: p1a2s3s4w5o6r6d7
+      configuration:
+        maximum-pool-size: 10
+        pool-name: PrimaryPool
+      properties:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: false
+        hbm2ddl: update
+
   store:
     trust:
       type: CertStore

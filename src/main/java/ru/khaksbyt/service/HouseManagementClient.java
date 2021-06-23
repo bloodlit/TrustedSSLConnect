@@ -1,8 +1,8 @@
 package ru.khaksbyt.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
-import org.springframework.ws.soap.client.core.SoapActionCallback;
 import ru.gosuslugi.dom.schema.integration.base.AckRequest;
 import ru.gosuslugi.dom.schema.integration.base.GetStateRequest;
 import ru.gosuslugi.dom.schema.integration.house_management.ExportHouseRequest;
@@ -13,8 +13,10 @@ import java.text.SimpleDateFormat;
 
 @Component
 public class HouseManagementClient {
-    private static final String DEFAULT_URL = "https://api.dom.gosuslugi.ru/ext-bus-home-management-service/services/HomeManagementAsync";
+    @Value("${application.orgguid}")
+    private String org;
 
+    private static final String DEFAULT_URL = "https://api.dom.gosuslugi.ru/ext-bus-home-management-service/services/HomeManagementAsync";
     private final WebServiceTemplate webServiceTemplate;
 
     public HouseManagementClient(WebServiceTemplate webServiceTemplate) {
@@ -30,7 +32,7 @@ public class HouseManagementClient {
         GetStateResult result = (GetStateResult) webServiceTemplate.marshalSendAndReceive(
                 DEFAULT_URL,
                 request,
-                new SoapActionCallback("urn:getState"));
+                new SoapHeaderAndActionCallback("urn:getState",  this.org));
 
         String res = "";
         if (result != null) {
@@ -63,7 +65,7 @@ public class HouseManagementClient {
         AckRequest result = (AckRequest) webServiceTemplate.marshalSendAndReceive(
                 DEFAULT_URL,
                 request,
-                new SoapActionCallback("urn:exportHouseData"));
+                new SoapHeaderAndActionCallback("urn:exportHouseData", this.org));
 
 
         String res = "";

@@ -30,7 +30,7 @@ import java.security.cert.X509Certificate;
 
 @Slf4j
 @Configuration
-public class CryptoProConfigure {
+public class CryptoProConfiguration {
     @Value("${application.store.trust.type:CertStore}")
     private String trustStoreType;
 
@@ -58,7 +58,7 @@ public class CryptoProConfigure {
 
     private SSLContext sSLContext;
 
-    public CryptoProConfigure() {
+    public CryptoProConfiguration() {
         System.setProperty("tls_prohibit_disabled_validation", "false");
 
         //включаем проверка цепочки сертификатов на отзыв по CRLDP сертификата

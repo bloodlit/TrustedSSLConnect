@@ -29,7 +29,7 @@ import javax.net.ssl.SSLContext;
 
 @Slf4j
 @Configuration
-public class HttpClientConfig {
+public class HttpClientConfiguration {
     // Keep alive
     private static final long DEFAULT_KEEP_ALIVE_TIME = 20 * 1000; // 20 sec
 
@@ -54,7 +54,7 @@ public class HttpClientConfig {
     private final SSLContext sslContext;
 
     @Autowired
-    public HttpClientConfig(SSLContext sslContext) {
+    public HttpClientConfiguration(SSLContext sslContext) {
         this.sslContext = sslContext;
     }
 
